@@ -1,0 +1,74 @@
+# 明日任务
+[哨兵二号特点](http://www.gisrs.cn/booksingles?id=a8b05c02-9463-4e43-a25e-fcbbfe62b668)
+## 1.选择哨兵二号数据，我们要下载自然色确定数据是对的，也就是对研究区域进行确认是和我们需要的一样的，之后根据植被和建筑不同要求选择波段进行下载，这个在gee上即可完成，最高分辨率为10米。
+## 2.我们可以选择整个杭州的数据，也可以按照张丰所说安吉数据或者临安的数据；区别点就是gee里面关于geometry的经纬度需要改变一下，这个有待商榷。
+## 3.哨兵二号是2015发射的，可能在时间跨度上会出现一些问题，这个需要注意。
+## 4.大家确认一下是不是在我的gee项目里面了，我们可以试着先按照老胡发的论文进行复现（如果可以的话），也可以在花点时间找简单点的模型用他们的方法进行处理，最关键的是我们要确实做事情了。
+## 5.Gee上截取数据相当简单，下面贴一段代码：
+
+```
+// 定义感兴趣区域（以杭州市为例）
+var geometry = ee.Geometry.Polygon(
+  [[[120.0422, 30.1443],
+    [120.0422, 30.3756],
+    [120.4042, 30.3756],
+    [120.4042, 30.1443]]]);
+
+// 选择哨兵2（Sentinel-2）数据集
+var collection = ee.ImageCollection('COPERNICUS/S2');
+
+// 筛选日期和地理区域
+var filteredCollection = collection.filterDate('2021-01-01', '2021-12-31')
+                                   .filterBounds(geometry);
+
+// 选择特定波段
+var selectedCollection = filteredCollection.select(['B4', 'B3', 'B2']);
+
+// 导出数据到Google Drive
+Export.image.toDrive({
+  image: selectedCollection.median(),
+  description: 'Sentinel_export',
+  folder: 'GEE_exports', //导出的数据将保存在Google Drive的指定文件夹（在代码中为’GEE_exports’）中。
+scale: 10,
+  region: geometry
+});
+```
+## 提取NDVI：
+使用Google Earth Engine（GEE）提取NDVI非常方便，因为GEE提供了强大的遥感数据处理和分析功能。以下是使用GEE提取NDVI的一般步骤：
+
+打开Google Earth Engine Code Editor：在浏览器中打开GEE网站（https://earthengine.google.com），登录您的Google账号，并点击 "Code Editor" 进入代码编辑器。导入影像：使用GEE提供的影像数据集或上传自己的遥感影像数据。例如，可以使用Landsat影像数据集。
+```
+javascript
+Copy code
+var image = ee.ImageCollection('LANDSAT/LC08/C01/T1')
+  .filterDate('YYYY-MM-DD', 'YYYY-MM-DD')
+  .filterBounds(geometry)
+ .median();
+```
+###### 在上述代码中，将 YYYY-MM-DD 替换为要选择的日期范围，geometry 替换为感兴趣区域的几何图形。
+
+###### 计算NDVI：使用遥感数据集计算NDVI指数。
+```
+javascript
+Copy code
+var ndvi = image.normalizedDifference(['B5', 'B4']);
+```
+###### 在上述代码中，B5 是近红外波段，B4 是红光波段。根据数据集的不同，波段编号可能会有所变化。
+
+###### 可视化结果：将NDVI结果可视化，以便观察植被分布情况。
+```
+javascript
+Copy code
+var ndviVis = {min: -1, max: 1, palette: ['blue', 'white', 'green']};
+Map.addLayer(ndvi, ndviVis, 'NDVI Image');
+Map.centerObject(geometry, 10);
+```
+###### 在上述代码中，ndviVis 定义了NDVI的可视化参数，可以根据需要进行调整。geometry 是感兴趣区域的几何图形，Map.centerObject(geometry, 10) 用于在地图上居中显示感兴趣区域。
+
+###### 运行代码：点击代码编辑器中的 "Run" 按钮，等待GEE计算并显示结果。在地图上，您将看到生成的NDVI图像。
+请注意，上述代码只是示例，您需要根据自己的数据和需求进行相应的调整。GEE提供了许多功能和数据集，您可以根据具体情况使用不同的数据和参数来提取和分析NDVI。
+
+
+
+
+
